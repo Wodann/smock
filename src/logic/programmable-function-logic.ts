@@ -1,5 +1,5 @@
 import { EVMResult } from '@nomicfoundation/ethereumjs-evm/dist/evm';
-import { EvmError } from '@nomicfoundation/ethereumjs-evm/dist/exceptions';
+import { ERROR, EvmError } from '@nomicfoundation/ethereumjs-evm/dist/exceptions';
 import { ethers } from 'ethers';
 import { findLast } from 'lodash';
 import { Observable, withLatestFrom } from 'rxjs';
@@ -7,6 +7,7 @@ import { ContractCall, ProgrammedReturnValue, WhenCalledWithChain } from '../ind
 import { WatchableFunctionLogic } from '../logic/watchable-function-logic';
 import { fromHexString } from '../utils';
 
+export const SMOCK_BUFFER: Buffer = Buffer.from('smock', 'utf8');
 const EMPTY_ANSWER: Buffer = fromHexString('0x' + '00'.repeat(2048));
 
 class ProgrammedAnswer {
@@ -88,7 +89,7 @@ export class ProgrammableFunctionLogic extends WatchableFunctionLogic {
     if (answer) {
       result.execResult.gas = BigInt(0);
       if (answer.shouldRevert) {
-        result.execResult.exceptionError = new EvmError('smock revert' as any);
+        result.execResult.exceptionError = new EvmError(ERROR.REVERT);
         result.execResult.returnValue = this.encodeRevertReason(answer.value);
       } else {
         result.execResult.exceptionError = undefined;
@@ -136,7 +137,9 @@ export class ProgrammableFunctionLogic extends WatchableFunctionLogic {
   }
 
   private encodeRevertReason(reason: string): Buffer {
-    if (reason === undefined) return EMPTY_ANSWER;
+    if (reason === undefined) {
+      return Buffer.concat([SMOCK_BUFFER, EMPTY_ANSWER]);
+    }
 
     const errorInterface = new ethers.utils.Interface([
       {
@@ -153,7 +156,7 @@ export class ProgrammableFunctionLogic extends WatchableFunctionLogic {
       },
     ]);
 
-    return fromHexString(errorInterface.encodeFunctionData('Error', [reason]));
+    return Buffer.concat([SMOCK_BUFFER, fromHexString(errorInterface.encodeFunctionData('Error', [reason]))]);
   }
 }
 

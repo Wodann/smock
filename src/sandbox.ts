@@ -4,6 +4,7 @@ import { BaseContract, ContractFactory, ethers } from 'ethers';
 import hre from 'hardhat';
 import { ethersInterfaceFromSpec } from './factories/ethers-interface';
 import { createFakeContract, createMockContractFactory } from './factories/smock-contract';
+import { SMOCK_BUFFER } from './logic/programmable-function-logic';
 import { ObservableVM } from './observable-vm';
 import { FakeContract, FakeContractOptions, FakeContractSpec, MockContractFactory } from './types';
 import { getHardhatBaseProvider, makeRandomAddress } from './utils';
@@ -27,6 +28,8 @@ try {
 } catch (err) {
   TransactionExecutionError = require('hardhat/internal/core/providers/errors').TransactionExecutionError;
 }
+
+let ExitCode = require('hardhat/internal/hardhat-network/provider/vm/exit').ExitCode;
 
 export class Sandbox {
   private vm: ObservableVM;
@@ -72,8 +75,11 @@ export class Sandbox {
     // with stack traces so we need to help hardhat out a bit when it comes to smock-specific errors.
     const originalManagerErrorsFn = node._manageErrors.bind(node);
     node._manageErrors = async (vmResult: any, vmTrace: any, vmTracerError?: any): Promise<any> => {
-      if (vmResult.exceptionError && vmResult.exceptionError.error === 'smock revert') {
-        return new TransactionExecutionError(`VM Exception while processing transaction: revert ${decodeRevertReason(vmResult.returnValue)}`);
+      // Check whether the revert starts with the smock buffer, if so, it's a smock revert
+      if (vmResult.exit.kind === ExitCode.REVERT && SMOCK_BUFFER.compare(vmResult.returnValue, 0, SMOCK_BUFFER.length) === 0) {
+        return new TransactionExecutionError(
+          `VM Exception while processing transaction: revert ${decodeRevertReason(vmResult.returnValue.slice(SMOCK_BUFFER.length))}`
+        );
       }
 
       return originalManagerErrorsFn(vmResult, vmTrace, vmTracerError);
