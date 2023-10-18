@@ -9,6 +9,14 @@ import { ObservableVM } from './observable-vm';
 import { FakeContract, FakeContractOptions, FakeContractSpec, MockContractFactory } from './types';
 import { getHardhatBaseProvider, makeRandomAddress } from './utils';
 
+// Handle hardhat ^2.19.0
+let ExitCode: any;
+try {
+  ExitCode = require('hardhat/internal/hardhat-network/provider/vm/exit').ExitCode;
+} catch (err) {
+  ExitCode = require('@nomicfoundation/ethereumjs-evm/dist/exceptions').ERROR;
+}
+
 // Handle hardhat ^2.4.0
 let decodeRevertReason: (value: Buffer) => string;
 try {
@@ -28,8 +36,6 @@ try {
 } catch (err) {
   TransactionExecutionError = require('hardhat/internal/core/providers/errors').TransactionExecutionError;
 }
-
-let ExitCode = require('hardhat/internal/hardhat-network/provider/vm/exit').ExitCode;
 
 export class Sandbox {
   private vm: ObservableVM;
@@ -75,8 +81,14 @@ export class Sandbox {
     // with stack traces so we need to help hardhat out a bit when it comes to smock-specific errors.
     const originalManagerErrorsFn = node._manageErrors.bind(node);
     node._manageErrors = async (vmResult: any, vmTrace: any, vmTracerError?: any): Promise<any> => {
+      const isRevert =
+        // Versions before Hardhat 2.19.0
+        (vmResult.exceptionError && vmResult.exceptionError.error === ExitCode.REVERT) ||
+        // Versions after Hardhat 2.19.0
+        (vmResult.exit && vmResult.exit.kind === ExitCode.REVERT);
+
       // Check whether the revert starts with the smock buffer, if so, it's a smock revert
-      if (vmResult.exit.kind === ExitCode.REVERT && SMOCK_BUFFER.compare(vmResult.returnValue, 0, SMOCK_BUFFER.length) === 0) {
+      if (isRevert && SMOCK_BUFFER.compare(vmResult.returnValue, 0, SMOCK_BUFFER.length) === 0) {
         return new TransactionExecutionError(
           `VM Exception while processing transaction: revert ${decodeRevertReason(vmResult.returnValue.slice(SMOCK_BUFFER.length))}`
         );
