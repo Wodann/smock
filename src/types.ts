@@ -2,7 +2,7 @@
 import { Fragment, Interface, JsonFragment } from '@ethersproject/abi';
 import { Provider } from '@ethersproject/abstract-provider';
 import { Signer } from '@ethersproject/abstract-signer';
-import { Address } from '@nomicfoundation/ethereumjs-util/dist/address';
+import { Address } from '@nomicfoundation/ethereumjs-util';
 import { BaseContract, BigNumber, ContractFactory, ethers } from 'ethers';
 import { EditableStorageLogic } from './logic/editable-storage-logic';
 import { ReadableStorageLogic } from './logic/readable-storage-logic';

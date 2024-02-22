@@ -53,7 +53,7 @@
     "package.json": "sort-package-json"
   },
   "dependencies": {
-    "@nomicfoundation/ethereumjs-util": "^8.0.0-rc.3",
+    "@nomicfoundation/ethereumjs-util": "^9.0.4",
     "diff": "^5.0.0",
     "lodash.isequal": "^4.5.0",
     "lodash.isequalwith": "^4.4.0",

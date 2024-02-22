@@ -1,5 +1,5 @@
 /* Imports: External */
-import { Address } from '@nomicfoundation/ethereumjs-util/dist/address';
+import { Address } from '@nomicfoundation/ethereumjs-util';
 import { HardhatNetworkProvider } from 'hardhat/internal/hardhat-network/provider/provider';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { toHexString } from '.';
