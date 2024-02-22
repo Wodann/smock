@@ -52,17 +52,8 @@
     "*.sol": "cross-env solhint --fix 'contracts/**/*.sol' 'interfaces/**/*.sol'",
     "package.json": "sort-package-json"
   },
-  "resolutions": {
-    "@ethereumjs/block": "3.2.1",
-    "@ethereumjs/blockchain": "5.2.1",
-    "@ethereumjs/common": "2.2.0",
-    "@ethereumjs/tx": "3.1.4",
-    "@ethereumjs/vm": "5.3.1"
-  },
   "dependencies": {
-    "@nomicfoundation/ethereumjs-evm": "^1.0.0-rc.3",
     "@nomicfoundation/ethereumjs-util": "^8.0.0-rc.3",
-    "@nomicfoundation/ethereumjs-vm": "^6.0.0-rc.3",
     "diff": "^5.0.0",
     "lodash.isequal": "^4.5.0",
     "lodash.isequalwith": "^4.4.0",

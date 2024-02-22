@@ -1,11 +1,10 @@
-import { VM } from '@nomicfoundation/ethereumjs-vm';
 import { FactoryOptions } from '@nomiclabs/hardhat-ethers/types';
 import { BaseContract, ContractFactory, ethers } from 'ethers';
 import hre from 'hardhat';
 import { ethersInterfaceFromSpec } from './factories/ethers-interface';
 import { createFakeContract, createMockContractFactory } from './factories/smock-contract';
 import { ObservableVM } from './observable-vm';
-import { FakeContract, FakeContractOptions, FakeContractSpec, MockContractFactory } from './types';
+import { FakeContract, FakeContractOptions, FakeContractSpec, MockContractFactory, VM } from './types';
 import { getHardhatBaseProvider, makeRandomAddress } from './utils';
 
 // Handle hardhat ^2.4.0

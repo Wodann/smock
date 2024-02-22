@@ -1,10 +1,9 @@
-import { EVMResult } from '@nomicfoundation/ethereumjs-evm/dist/evm';
-import { EvmError } from '@nomicfoundation/ethereumjs-evm/dist/exceptions';
 import { ethers } from 'ethers';
 import { findLast } from 'lodash';
 import { Observable, withLatestFrom } from 'rxjs';
 import { ContractCall, ProgrammedReturnValue, WhenCalledWithChain } from '../index';
 import { WatchableFunctionLogic } from '../logic/watchable-function-logic';
+import { EVMResult } from '../types';
 import { fromHexString } from '../utils';
 
 const EMPTY_ANSWER: Buffer = fromHexString('0x' + '00'.repeat(2048));

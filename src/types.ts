@@ -86,3 +86,9 @@ export type MockContractFactory<F extends ContractFactory> = Omit<F, 'deploy' | 
   connect: (...args: Parameters<F['connect']>) => MockContractFactory<F>;
   deploy: (...args: Parameters<F['deploy']>) => Promise<MockContract<ThenArg<ReturnType<F['deploy']>>>>;
 };
+
+export interface EVMResult {}
+export interface Message {}
+export interface VM {
+  stateManager: SmockVMManager;
+}

@@ -1,4 +1,3 @@
-import { Message } from '@nomicfoundation/ethereumjs-evm/dist/message';
 import { FactoryOptions } from '@nomiclabs/hardhat-ethers/types';
 import { BaseContract, BigNumber, ContractFactory, ethers } from 'ethers';
 import { Interface } from 'ethers/lib/utils';
@@ -10,7 +9,7 @@ import { ProgrammableFunctionLogic, SafeProgrammableContract } from '../logic/pr
 import { ReadableStorageLogic as ReadableStorage } from '../logic/readable-storage-logic';
 import { ObservableVM } from '../observable-vm';
 import { Sandbox } from '../sandbox';
-import { ContractCall, FakeContract, MockContractFactory, ProgrammableContractFunction, ProgrammedReturnValue } from '../types';
+import { ContractCall, FakeContract, Message, MockContractFactory, ProgrammableContractFunction, ProgrammedReturnValue } from '../types';
 import { convertPojoToStruct, fromFancyAddress, impersonate, isPojo, toFancyAddress, toHexString } from '../utils';
 import { getStorageLayout } from '../utils/storage';
 

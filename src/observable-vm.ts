@@ -1,9 +1,6 @@
-import { EVMResult } from '@nomicfoundation/ethereumjs-evm/dist/evm';
-import { Message } from '@nomicfoundation/ethereumjs-evm/dist/message';
-import { VM } from '@nomicfoundation/ethereumjs-vm';
 import { Observable, Subject } from 'rxjs';
 import { filter, share } from 'rxjs/operators';
-import { SmockVMManager } from './types';
+import { EVMResult, Message, SmockVMManager, VM } from './types';
 
 export class ObservableVM {
   private vm: VM;
@@ -19,7 +16,7 @@ export class ObservableVM {
   }
 
   getManager(): SmockVMManager {
-    return this.vm.stateManager as SmockVMManager;
+    return this.vm.stateManager;
   }
 
   getBeforeMessages(): Observable<Message> {
