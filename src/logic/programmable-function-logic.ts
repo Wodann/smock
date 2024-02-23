@@ -84,7 +84,11 @@ export class ProgrammableFunctionLogic extends WatchableFunctionLogic {
 
     const answer = this.getCallAnswer(data);
     if (answer) {
-      return [this.encodeValue(answer.value, data), answer.shouldRevert];
+      if (answer.shouldRevert) {
+        return [this.encodeRevertReason(answer.value), answer.shouldRevert];
+      } {
+        return [this.encodeValue(answer.value, data), answer.shouldRevert];
+      }
     }
   }
 
