@@ -102,7 +102,10 @@ export interface VM {
   };
 }
 
-export type AfterMessageCallback = (address: Buffer, data: Buffer) => { result: Buffer; shouldRevert: boolean; gas: bigint } | undefined;
+export type AfterMessageCallback = (
+  address: Buffer,
+  data: Buffer
+) => Promise<{ result: Buffer; shouldRevert: boolean; gas: bigint } | undefined>;
 export interface EDRProvider {
   _addAfterMessageCallback(callback: AfterMessageCallback): void;
   _node: {

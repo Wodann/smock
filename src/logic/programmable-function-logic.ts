@@ -79,15 +79,16 @@ export class ProgrammableFunctionLogic extends WatchableFunctionLogic {
     this.answerByArgs = [];
   }
 
-  getEncodedCallAnswer(address: Address, data: Buffer): [result: Buffer, shouldRevert: boolean] | undefined {
+  async getEncodedCallAnswer(address: Address, data: Buffer): Promise<[result: Buffer, shouldRevert: boolean] | undefined> {
     this.callCount++;
 
     const answer = this.getCallAnswer(data);
     if (answer) {
       if (answer.shouldRevert) {
         return [this.encodeRevertReason(answer.value), answer.shouldRevert];
-      } {
-        return [this.encodeValue(answer.value, data), answer.shouldRevert];
+      }
+      {
+        return [await this.encodeValue(answer.value, data), answer.shouldRevert];
       }
     }
   }
@@ -109,7 +110,7 @@ export class ProgrammableFunctionLogic extends WatchableFunctionLogic {
     return this.defaultAnswer;
   }
 
-  private encodeValue(value: ProgrammedReturnValue, data: Buffer): Buffer {
+  private async encodeValue(value: ProgrammedReturnValue, data: Buffer): Promise<Buffer> {
     if (value === undefined) return EMPTY_ANSWER;
 
     const args = this.sighash === null ? toHexString(data) : getMessageArgs(data, this.contractInterface, this.sighash);
@@ -117,7 +118,7 @@ export class ProgrammableFunctionLogic extends WatchableFunctionLogic {
     // TODO `value(args)` should be `await value(args)`
     // which will make the function async, and therefore call override will need
     // to be async
-    let toEncode = typeof value === 'function' ? value(args) : value;
+    let toEncode = typeof value === 'function' ? await value(args) : value;
 
     let encodedReturnValue: string = '0x';
     try {

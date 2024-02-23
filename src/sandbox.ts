@@ -40,10 +40,10 @@ export class Sandbox {
     provider._addAfterMessageCallback((address, data) => this.overrideCall(address, data));
   }
 
-  private overrideCall(address: Buffer, data: Buffer): ReturnType<AfterMessageCallback> {
+  private async overrideCall(address: Buffer, data: Buffer): ReturnType<AfterMessageCallback> {
     const calledFunction = this.getCalledFunction(address, data);
 
-    const encodedCallAnswer = calledFunction?.getEncodedCallAnswer(new Address(address), data);
+    const encodedCallAnswer = await calledFunction?.getEncodedCallAnswer(new Address(address), data);
 
     if (encodedCallAnswer === undefined) {
       return undefined;
