@@ -1,9 +1,10 @@
+import { Address } from '@nomicfoundation/ethereumjs-util';
 import { FactoryOptions } from '@nomiclabs/hardhat-ethers/types';
 import { BaseContract, BigNumber, ContractFactory, ethers } from 'ethers';
 import { Interface } from 'ethers/lib/utils';
 import { ethers as hardhatEthers } from 'hardhat';
 import { Observable } from 'rxjs';
-import { distinct, filter, map, share, withLatestFrom } from 'rxjs/operators';
+import { filter, map, share } from 'rxjs/operators';
 import { EditableStorageLogic as EditableStorage } from '../logic/editable-storage-logic';
 import { ProgrammableFunctionLogic, SafeProgrammableContract } from '../logic/programmable-function-logic';
 import { ReadableStorageLogic as ReadableStorage } from '../logic/readable-storage-logic';
@@ -17,16 +18,18 @@ export async function createFakeContract<Contract extends BaseContract>(
   vm: ObservableVM,
   address: string,
   contractInterface: ethers.utils.Interface,
-  provider: ethers.providers.Provider
+  provider: ethers.providers.Provider,
+  addFunctionToMap: (address: string, sighash: string | null, functionLogic: ProgrammableFunctionLogic) => void
 ): Promise<FakeContract<Contract>> {
   const fake = (await initContract(vm, address, contractInterface, provider)) as unknown as FakeContract<Contract>;
   const contractFunctions = getContractFunctionsNameAndSighash(contractInterface, Object.keys(fake.functions));
 
   // attach to every contract function, all the programmable and watchable logic
   contractFunctions.forEach(([sighash, name]) => {
-    const { encoder, calls$, results$ } = getFunctionEventData(vm, contractInterface, fake.address, sighash);
-    const functionLogic = new SafeProgrammableContract(name, calls$, results$, encoder);
+    const { encoder, calls$ } = getFunctionEventData(vm, contractInterface, fake.address, sighash);
+    const functionLogic = new SafeProgrammableContract(Address.fromString(fake.address), contractInterface, sighash, name, calls$, encoder);
     fillProgrammableContractFunction(fake[name], functionLogic);
+    addFunctionToMap(fake.address, sighash, functionLogic);
   });
 
   return fake;
@@ -35,7 +38,8 @@ export async function createFakeContract<Contract extends BaseContract>(
 function mockifyContractFactory<T extends ContractFactory>(
   vm: ObservableVM,
   contractName: string,
-  factory: MockContractFactory<T>
+  factory: MockContractFactory<T>,
+  addFunctionToMap: (address: string, sighash: string | null, functionLogic: ProgrammableFunctionLogic) => void
 ): MockContractFactory<T> {
   const realDeploy = factory.deploy;
   factory.deploy = async (...args: Parameters<T['deploy']>) => {
@@ -44,9 +48,10 @@ function mockifyContractFactory<T extends ContractFactory>(
 
     // attach to every contract function, all the programmable and watchable logic
     contractFunctions.forEach(([sighash, name]) => {
-      const { encoder, calls$, results$ } = getFunctionEventData(vm, mock.interface, mock.address, sighash);
-      const functionLogic = new ProgrammableFunctionLogic(name, calls$, results$, encoder);
+      const { encoder, calls$ } = getFunctionEventData(vm, mock.interface, mock.address, sighash);
+      const functionLogic = new ProgrammableFunctionLogic(Address.fromString(mock.address), mock.interface, sighash, name, calls$, encoder);
       fillProgrammableContractFunction(mock[name], functionLogic);
+      addFunctionToMap(mock.address, sighash, functionLogic);
     });
 
     // attach to every internal variable, all the editable logic
@@ -65,7 +70,7 @@ function mockifyContractFactory<T extends ContractFactory>(
   const realConnect = factory.connect;
   factory.connect = (...args: Parameters<T['connect']>): MockContractFactory<T> => {
     const newFactory = realConnect.apply(factory, args) as MockContractFactory<T>;
-    return mockifyContractFactory(vm, contractName, newFactory);
+    return mockifyContractFactory(vm, contractName, newFactory, addFunctionToMap);
   };
 
   return factory;
@@ -74,10 +79,11 @@ function mockifyContractFactory<T extends ContractFactory>(
 export async function createMockContractFactory<T extends ContractFactory>(
   vm: ObservableVM,
   contractName: string,
+  addFunctionToMap: (address: string, sighash: string | null, functionLogic: ProgrammableFunctionLogic) => void,
   signerOrOptions?: ethers.Signer | FactoryOptions
 ): Promise<MockContractFactory<T>> {
   const factory = (await hardhatEthers.getContractFactory(contractName, signerOrOptions)) as unknown as MockContractFactory<T>;
-  return mockifyContractFactory(vm, contractName, factory);
+  return mockifyContractFactory(vm, contractName, factory, addFunctionToMap);
 }
 
 async function initContract(
@@ -103,14 +109,8 @@ function getFunctionEventData(vm: ObservableVM, contractInterface: ethers.utils.
   const encoder = getFunctionEncoder(contractInterface, sighash);
   // Filter only the calls that correspond to this function, from vm beforeMessages
   const calls$ = parseAndFilterBeforeMessages(vm.getBeforeMessages(), contractInterface, contractAddress, sighash);
-  // Get every result that comes right after a call to this function
-  const results$ = vm.getAfterMessages().pipe(
-    withLatestFrom(calls$),
-    distinct(([, call]) => call),
-    map(([answer]) => answer)
-  );
 
-  return { encoder, calls$, results$ };
+  return { encoder, calls$ };
 }
 
 function getFunctionEncoder(contractInterface: ethers.utils.Interface, sighash: string | null): (values?: ProgrammedReturnValue) => string {
@@ -210,7 +210,7 @@ function parseMessage(message: Message, contractInterface: Interface, sighash: s
   };
 }
 
-function getMessageArgs(messageData: Buffer, contractInterface: Interface, sighash: string): unknown[] {
+export function getMessageArgs(messageData: Buffer, contractInterface: Interface, sighash: string): unknown[] {
   try {
     return contractInterface.decodeFunctionData(contractInterface.getFunction(sighash).format(), toHexString(messageData)) as unknown[];
   } catch (err) {

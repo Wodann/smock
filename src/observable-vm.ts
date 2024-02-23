@@ -12,7 +12,6 @@ export class ObservableVM {
 
     this.vm = vm;
     this.beforeMessage$ = ObservableVM.fromEvent<Message>(vm, 'beforeMessage');
-    this.afterMessage$ = ObservableVM.fromEvent<EVMResult>(vm, 'afterMessage');
   }
 
   getManager(): SmockVMManager {
@@ -21,10 +20,6 @@ export class ObservableVM {
 
   getBeforeMessages(): Observable<Message> {
     return this.beforeMessage$.pipe(filter((message) => !!message.to));
-  }
-
-  getAfterMessages(): Observable<EVMResult> {
-    return this.afterMessage$;
   }
 
   private static fromEvent<T>(vm: VM, eventName: 'beforeMessage' | 'afterMessage'): Observable<T> {

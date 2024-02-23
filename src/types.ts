@@ -88,7 +88,24 @@ export type MockContractFactory<F extends ContractFactory> = Omit<F, 'deploy' | 
 };
 
 export interface EVMResult {}
-export interface Message {}
+export interface Message {
+  to?: Address;
+  delegatecall: boolean;
+  codeAddress: Address;
+  data: Buffer;
+  value: bigint;
+}
 export interface VM {
   stateManager: SmockVMManager;
+  evm: {
+    events: any;
+  };
+}
+
+export type AfterMessageCallback = (address: Buffer, data: Buffer) => { result: Buffer; shouldRevert: boolean; gas: bigint } | undefined;
+export interface EDRProvider {
+  _addAfterMessageCallback(callback: AfterMessageCallback): void;
+  _node: {
+    _vm: VM;
+  };
 }
