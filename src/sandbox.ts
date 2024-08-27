@@ -34,10 +34,8 @@ export class Sandbox {
   private static nonce: number = 0;
   private addressToSighashToFunction: Map<string, Map<string | null, ProgrammableFunctionLogic>> = new Map();
 
-  constructor(provider: EDRProvider) {
+  private constructor(provider: EDRProvider) {
     this.vm = new ObservableVM(provider._node._vm);
-
-    provider._setCallOverrideCallback((address, data) => this.overrideCall(address, data));
   }
 
   private async overrideCall(address: Buffer, data: Buffer): ReturnType<CallOverrideCallback> {
@@ -114,15 +112,20 @@ export class Sandbox {
       );
     }
 
-    const provider: any = await getHardhatBaseProvider(hre);
-    const node = provider._node;
+    const providerAny: any = await getHardhatBaseProvider(hre);
+    const node = providerAny._node;
 
     // Initialize VM it case it hasn't been already
     if (node === undefined) {
-      await provider._init();
+      await providerAny._init();
     }
 
-    return new Sandbox(provider);
+    const provider: EDRProvider = providerAny;
+    const sandbox = new Sandbox(provider);
+
+    await provider._setCallOverrideCallback((address, data) => sandbox.overrideCall(address, data));
+
+    return sandbox;
   }
 
   static getNextNonce(): number {

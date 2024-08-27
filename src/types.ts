@@ -105,7 +105,7 @@ export interface VM {
 export type CallOverrideCallback = (address: Buffer, data: Buffer) => Promise<{ result: Buffer; shouldRevert: boolean } | undefined>;
 
 export interface EDRProvider {
-  _setCallOverrideCallback(callback: CallOverrideCallback): void;
+  _setCallOverrideCallback(callback: CallOverrideCallback): Promise<void>;
   _node: {
     _vm: VM;
   };
