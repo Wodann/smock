@@ -95,7 +95,7 @@ describe('Fake: Initialization', () => {
   it('should throw error for invalid json string abi', async () => {
     await expect(smock.fake(`{invalid}`)).to.be.rejectedWith(
       Error,
-      `unable to generate smock spec from abi string.\nUnexpected token i in JSON at position 1`
+      `unable to generate smock spec from abi string.\nExpected property name or '}' in JSON at position 1`
     );
   });
 
