@@ -25,11 +25,6 @@ async function mock<T extends ContractFactory>(
 
 async function init() {
   sandbox = await Sandbox.create();
-
-  // reinit in case there is an evm reset
-  (await getHardhatBaseProvider(hre)).on('hardhatNetworkReset', async () => {
-    sandbox = await Sandbox.create();
-  });
 }
 
 export * from './types';
